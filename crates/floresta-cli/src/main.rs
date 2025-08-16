@@ -10,6 +10,7 @@ use floresta_cli::jsonrpc_client::Client;
 use floresta_cli::rpc::FlorestaRPC;
 use floresta_cli::rpc_types::AddNodeCommand;
 use floresta_cli::rpc_types::GetBlockRes;
+use floresta_cli::rpc_types::GetRawTxRes;
 // Main function that runs the CLI application
 fn main() -> anyhow::Result<()> {
     // Parse command line arguments into a Cli struct
@@ -64,6 +65,14 @@ fn do_request(cmd: &Cli, client: Client) -> anyhow::Result<String> {
         }
         Methods::RescanBlockchain { start_height } => {
             serde_json::to_string_pretty(&client.rescanblockchain(start_height)?)?
+        }
+        Methods::GetRawTransaction { tx , verbose, blockhash} => {
+            let transaction = client.get_raw_transaction(tx, verbose, blockhash)?;
+
+            match transaction {
+                GetRawTxRes::Verbose(transaction) => serde_json::to_string_pretty(&transaction)?,
+                GetRawTxRes::Serialized(transaction) => serde_json::to_string_pretty(&transaction)?,
+            }
         }
         Methods::SendRawTransaction { tx } => {
             serde_json::to_string_pretty(&client.send_raw_transaction(tx)?)?
@@ -174,6 +183,14 @@ pub enum Methods {
     #[command(name = "rescanblockchain")]
     RescanBlockchain { start_height: u32 },
 
+    /// Returns the transaction
+    #[command(name = "getrawtransaction")]
+    GetRawTransaction {
+        tx: String,
+        verbose: Option<u32>,
+        blockhash: Option<BlockHash>,
+    },
+    
     /// Submits a raw transaction to the network
     #[command(name = "sendrawtransaction")]
     SendRawTransaction { tx: String },

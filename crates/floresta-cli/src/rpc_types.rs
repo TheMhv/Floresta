@@ -53,8 +53,13 @@ pub struct GetBlockchainInfoRes {
     pub difficulty: u64,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub enum GetRawTxRes {
+    Verbose(Box<RawTx>),
+    Serialized(String),
+}
 /// The information returned by a get_raw_tx
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct RawTx {
     /// Whether this tx is in our best known chain
     pub in_active_chain: bool,
@@ -94,7 +99,7 @@ pub struct RawTx {
 }
 
 /// A transaction output returned by some RPCs like gettransaction and getblock
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct TxOut {
     /// The amount in sats locked in this UTXO
     pub value: u64,
@@ -105,7 +110,7 @@ pub struct TxOut {
 }
 
 /// The locking script inside a txout
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScriptPubKey {
     /// A ASM representation for this script
     ///
@@ -127,7 +132,7 @@ pub struct ScriptPubKey {
 }
 
 /// A transaction input returned by some rpcs, like gettransaction and getblock
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct TxIn {
     /// The txid that created this UTXO
     pub txid: String,
@@ -144,7 +149,7 @@ pub struct TxIn {
 
 /// A representation for the transaction ScriptSig, returned by some rpcs
 /// like gettransaction and getblock
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScriptSigJson {
     /// A ASM representation for this scriptSig
     ///

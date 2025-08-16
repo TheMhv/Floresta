@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use bitcoin::block::Header as BlockHeader;
+use bitcoin::hashes::Hash;
 use bitcoin::BlockHash;
 use bitcoin::Txid;
 use serde_json::Number;
@@ -67,6 +68,8 @@ pub trait FlorestaRPC {
     fn rescanblockchain(&self, start_height: u32) -> Result<bool>;
     /// Returns the current height of the blockchain
     fn get_block_count(&self) -> Result<u32>;
+    /// Return the raw transaction data.
+    fn get_raw_transaction(&self, tx: String, verbosity: Option<u32>, blockhash: Option<BlockHash>) -> Result<GetRawTxRes>;
     /// Sends a hex-encoded transaction to the network
     ///
     /// This method sends a transaction to the network. The transaction should be encoded as a
@@ -291,6 +294,39 @@ impl<T: JsonRPCClient> FlorestaRPC for T {
 
     fn get_blockchain_info(&self) -> Result<GetBlockchainInfoRes> {
         self.call("getblockchaininfo", &[])
+    }
+
+    fn get_raw_transaction(&self, tx: String, verbosity: Option<u32>, blockhash: Option<BlockHash>) -> Result<GetRawTxRes> {
+        let verbosity = verbosity.unwrap_or(0);
+        let blockhash = blockhash.unwrap_or(BlockHash::all_zeros());
+
+        match verbosity {
+            0 => {
+                let raw_transaction = self.call(
+                    "getrawtransaction",
+                    &[
+                        Value::String(tx),
+                        Value::Number(Number::from(verbosity)),
+                        Value::String(blockhash.to_string()),
+                    ],
+                )?;
+                Ok(GetRawTxRes::Serialized(raw_transaction))
+            }
+
+            1 => {
+                let raw_transaction = self.call(
+                    "getrawtransaction",
+                    &[
+                        Value::String(tx),
+                        Value::Number(Number::from(verbosity)),
+                        Value::String(blockhash.to_string()),
+                    ],
+                )?;
+                Ok(GetRawTxRes::Verbose(raw_transaction))
+            }
+
+            _ => Err(rpc_types::Error::InvalidVerbosity),
+        }
     }
 
     fn send_raw_transaction(&self, tx: String) -> Result<Txid> {
